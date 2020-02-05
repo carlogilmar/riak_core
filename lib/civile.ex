@@ -1,18 +1,15 @@
 defmodule Civile do
-  @moduledoc """
-  Documentation for Civile.
-  """
+	use Application
+	require Logger
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Civile.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+	def start(_type, _args) do
+		case Civile.Supervisor.start_link do
+			{:ok, pid} ->
+				:ok = :riak_core.register(vnode_module: Civile.VNode)
+				:ok = :riak_core_node_watcher.service_up(Civile.Service, self())
+				{:ok, pid}
+			{:error, reason} ->
+				Logger.error("Unable to start Civile supervisor because: #{inspect reason}")
+		end
+	end
 end
